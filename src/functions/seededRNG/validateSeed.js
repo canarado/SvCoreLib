@@ -1,9 +1,3 @@
-/**
- * 🔹 Validates a seed 🔹
- * @param {(Number|String)} seed 
- * @returns {Boolean}
- * @since 1.8.0
- */
 const validateSeed = (seed) => {
     let isEmpty = require("../isEmpty");
     let digitCount = null;
@@ -25,4 +19,5 @@ const validateSeed = (seed) => {
 
     return true;
 }
+
 module.exports = validateSeed;

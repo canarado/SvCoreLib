@@ -1,10 +1,11 @@
 const minimatch = require("minimatch");
 const fs = require("fs-extra");
-const { resolve } = require("path");
+const { resolve, join, basename } = require("path");
+const crypto = require("crypto");
+const reserialize = require("../functions/reserialize");
+const diff = require("deep-diff");
+const readdirRecursive = require("../functions/filesystem/readdirRecursive");
 
-/**
- * @typedef {Array<String>} DaemonResult An array of strings containing file paths
- */
 
 class InvalidPathError extends Error
 {
@@ -36,60 +37,54 @@ class PatternInvalidError extends Error
 
 class FolderDaemon
 {
-    /**
-     * 🔹 FolderDaemon supervises a folder and listens for changes in the files and then it calls a callback function. 🔹
-     * @param {String} folderPath The path to the folder you want the daemon to supervise
-     * @param {Array<String>} [filesBlacklist] An optional array of [glob pattern](https://en.wikipedia.org/wiki/Glob_(programming)) strings. Example: `['*.js']` will block all .js files from being scanned by the daemon.
-     * @param {Number} [updateInterval=500] The interval (in milliseconds) at which to scan for changed files. Defaults to `500` ms. Set to `0` to disable the interval. Then call `intervalCall()` to manually scan the folder.
-     * 
-     * @throws {InvalidPathError} Throws an `InvalidPathError` if the path to the folder is invalid
-     * @throws {NotAFolderError} Throws a `NotAFolderError` if the path leads to a file instead of a folder
-     * @throws {PatternInvalidError} Throws a `PatternInvalidError` if the provided glob blacklist pattern is invalid
-     * 
-     * @since 1.10.0
-     */
-    constructor(folderPath, filesBlacklist, updateInterval = 500)
+    constructor(dirPath, filesBlacklist, recursive = false, updateInterval = 500)
     {
         updateInterval = parseInt(updateInterval);
 
-        if(!updateInterval || isNaN(updateInterval))
+        if((!updateInterval && updateInterval !== 0) || isNaN(updateInterval))
             updateInterval = 500;
 
         try
         {
-            let dirPath = resolve(folderPath);
+            let dPath = resolve(dirPath);
 
             if(!fs.pathExistsSync)
-                throw new InvalidPathError(`Path "${dirPath}" is invalid or couldn't be resolved`);
+                throw new InvalidPathError(`Path "${dPath}" is invalid or couldn't be resolved`);
 
-            if(!fs.statSync(dirPath).isDirectory())
-                throw new NotAFolderError(`Path "${dirPath}" is not a folder`);
+            if(!fs.statSync(dPath).isDirectory())
+                throw new NotAFolderError(`Path "${dPath}" is not a directory`);
 
-            this._dirPath = dirPath;
+            this._dirPath = dPath;
         }
         catch(err)
         {
-            throw new InvalidPathError(`Path "${folderPath}" is invalid or couldn't be resolved`);
+            throw new InvalidPathError(`Path "${dirPath}" is invalid or couldn't be resolved`);
         }
 
         if(filesBlacklist != undefined && !Array.isArray(filesBlacklist))
             throw new PatternInvalidError(`Blacklist glob pattern parameter was provided but is not an array containing strings`);
 
+        if(typeof recursive != "boolean")
+            recursive = false;
+        
+        this._recursive = recursive;
+
         this._callbackAttached = false;
         this._callbackFn = () => {};
         this._blacklistPattern = filesBlacklist || [];
 
-        this._lastHash = null;
-        this._currentHash = null;
+        this._lastHashes = {};
+        this._currentHashes = {};
 
-        this._interval = setInterval(() => this._intervalCall(), updateInterval);
+        if(updateInterval > 0)
+        {
+            this._interval = setInterval(() => this.intervalCall(), updateInterval);
+            this.intervalCall();
+        }
+
+        return this;
     }
 
-    /**
-     * 🔹 Registers a callback function to be called when the FolderDaemon detects one or more changed files 🔹
-     * @param {Function<String|null, DaemonResult>} [callback_fn] Callback function that contains two parameters: the first one, which is either a string or null and the second one which contains an object of type `DaemonResult`
-     * @returns {Promise<DaemonResult, String>} Returns a promise that resolves to an array of type `DaemonResult` or rejects to an error message.
-     */
     onChanged(callback_fn)
     {
         if(typeof callback_fn == "function")
@@ -101,39 +96,132 @@ class FolderDaemon
         });
     }
 
-    /**
-     * 🔹 Removes the previously registered callback function(s) 🔹
-     * @returns {void}
-     */
     removeCallbacks()
     {
+        this._callbackFn = () => {};
+        this._promiseResolve = () => {};
+        this._promiseReject = () => {};
+    }
 
+    intervalCall()
+    {
+        this.scanDir().then(files => {
+            if(Array.isArray(files))
+            {
+                let promises = [];
+
+                let hashFile = (filePath) => {
+                    return new Promise((hashResolve) => {
+                        if(!fs.statSync(filePath).isFile())
+                            return hashResolve(null);
+                        
+                        fs.stat(filePath, (err, stats) => {
+                            if(err)
+                                return hashResolve(null);
+
+                            if(stats.size == 0)
+                            {
+                                return hashResolve({
+                                    path: filePath,
+                                    hash: "FILE_EMPTY"
+                                });
+                            }
+
+                            let fileStream = fs.createReadStream(filePath);
+                            let hash = crypto.createHash("sha1");
+                            
+                            hash.setEncoding("hex");
+
+                            fileStream.on("end", () => {
+                                if(hash)
+                                {
+                                    hash.end();
+
+                                    let hashStr = hash.read();
+
+                                    return hashResolve({
+                                        path: filePath,
+                                        hash: hashStr
+                                    });
+                                }
+                                else
+                                    return hashResolve(null);
+                            });
+
+                            fileStream.pipe(hash);
+                        });
+                    });
+                }
+
+                files.forEach(file => {
+                    this._blacklistPattern.forEach(pattern => {
+                        let match = minimatch(basename(file), pattern);
+                        if(match)
+                            return;
+
+                        let filePath = !this._recursive ? join(this._dirPath, file) : file;
+
+                        promises.push(hashFile(filePath));
+                    });
+                });
+
+                Promise.all(promises).then(results => {
+                    this._currentHashes = {};
+
+                    results.forEach(result => {
+                        if(typeof result == "object" && result != null)
+                            this._currentHashes[result.path] = result.hash;
+                    });
+
+                    if(Object.keys(this._lastHashes).length == 0)
+                        this._lastHashes = reserialize(this._currentHashes);
+
+                    let deepDiff = diff(this._lastHashes, this._currentHashes);
+
+                    if(Array.isArray(deepDiff) && deepDiff.length > 0)
+                    {
+                        // files have changed
+                        let changedFiles = deepDiff.map(match => match.path[0]);
+
+                        this._callbackFn(null, changedFiles);
+                        this._promiseResolve(changedFiles);
+                    }
+
+                    this._lastHashes = reserialize(this._currentHashes);
+                }).catch(err => {
+                    return this._promiseReject(`Error while scanning through directory: ${err}`);
+                });
+            }
+        }).catch(err => {
+            this._callbackFn(err);
+            this._promiseReject(err);
+        });
     }
 
     /**
-     * 🔹 This is called on interval to check the folder but feel free to manually call it if you set the interval to `0` or if you want to check the folder at a precise time 🔹
+     * ❌ Private method - don't use ❌
+     * @private
+     * @returns {Promise<Array<String>>}
      */
-    intervalCall()
+    scanDir()
     {
-        fs.readdir(resolve(this._dirPath), (err, files) => {
-            if(err)
+        return new Promise((res, rej) => {
+            if(!this._recursive)
             {
-                this._callbackFn(err);
-                this._promiseReject(err);
+                fs.readdir(resolve(this._dirPath), (err, files) => {
+                    if(!err)
+                        return res(files);
+                    else
+                        return rej(err);
+                });
             }
             else
             {
-                if(Array.isArray(files))
-                {
-                    files.forEach(file => {
-                        let filePath = resolve(file);
-
-                        if(!fs.statSync(filePath).isFile())
-                            return;
-
-                        let fileStream = fs.createReadStream(filePath);
-                    });
-                }
+                readdirRecursive(resolve(this._dirPath)).then(results => {
+                    return res(results);
+                }).catch(err => {
+                    return rej(err);
+                })
             }
         });
     }
