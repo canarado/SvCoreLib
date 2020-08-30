@@ -23,6 +23,14 @@ jobs:
       run: npm ci
       env:
         CI: "true"
+    - name: Install ESLint # installs ESLint
+      run: npm i -g eslint
+      env:
+        CI: "true"
+    - name: Run ESLint # Runs ESLint on the project
+      run: npm run lint
+      env:
+        CI: "true"
     # - name: Run Unit Tests # runs all unit tests
     #   run: npm test
     #   env:
@@ -31,16 +39,17 @@ jobs:
     #   env:
     #     CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     #   run: npx nyc --reporter=lcov npm run test && npx codecov -t $CODECOV_TOKEN
-    # - name: Discord success notification # sends a Discord notification
-    #   env:
-    #     DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-    #   uses: Ilshidur/action-discord@master
-    #   with:
-    #     args: '✅ **SvCoreLib CI** (triggered by `{{GITHUB_ACTOR}}` on `{{GITHUB_REF}}`) was successful (see https://github.com/Sv443/SvCoreLib/commit/{{GITHUB_SHA}}/checks)' 
-    # - name: Discord failure notification # sends a Discord notification
-    #   env:
-    #     DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-    #   uses: Ilshidur/action-discord@master
-    #   with:
-    #     args: '🚫 **SvCoreLib CI** (triggered by `{{GITHUB_ACTOR}}` on `{{GITHUB_REF}}`) has failed (see https://github.com/Sv443/SvCoreLib/commit/{{GITHUB_SHA}}/checks)'
-    #   if: failure()
+    - name: Discord success notification # sends a Discord notification
+      env:
+        DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+      uses: Ilshidur/action-discord@master
+      with:
+        args: '✅ **SvCoreLib CI** (triggered by `{{GITHUB_ACTOR}}` on `{{GITHUB_REF}}`) was successful (see https://github.com/Sv443/SvCoreLib/commit/{{GITHUB_SHA}}/checks)' 
+    - name: Discord failure notification # sends a Discord notification
+      env:
+        DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+      uses: Ilshidur/action-discord@master
+      with:
+        args: '🚫 **SvCoreLib CI** (triggered by `{{GITHUB_ACTOR}}` on `{{GITHUB_REF}}`) has failed (see https://github.com/Sv443/SvCoreLib/commit/{{GITHUB_SHA}}/checks)'
+      if: failure()
+

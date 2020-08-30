@@ -13,6 +13,7 @@ This is the documentation of SvCoreLib (also referred to as SCL)
         - [filesystem.logger()](#filesystemlogger)
         - [filesystem.readdirRecursive()](#filesystemreaddirrecursive)
         - [filesystem.readdirRecursiveSync()](#filesystemreaddirrecursivesync)
+        - [downloadFile()](#downloadfile)
     - [Generate UUID](#generate-uuid)
         - [generateUUID.alphanumerical()](#generateuuidalphanumerical)
         - [generateUUID.binary()](#generateuuidbinary)
@@ -30,7 +31,6 @@ This is the documentation of SvCoreLib (also referred to as SCL)
     - [Other](#other)
         - [allEqual()](#allequal)
         - [byteLength()](#bytelength)
-        - [downloadFile()](#downloadfile)
         - [error()](#error)
         - [inDebugger()](#indebugger)
         - [isArrayEmpty()](#isarrayempty)
@@ -57,6 +57,11 @@ This is the documentation of SvCoreLib (also referred to as SCL)
     - [colors](#colors)
     - [info](#info)
 - **[Legal Information](#legal-information)**
+    - [License](#license)
+    - [Disclaimer](#disclaimer)
+    - [Privacy Policy](#privacy-policy)
+    - [Security Policy](#security-policy)
+    - [Site Notice / Impressum](#site-notice)
 
 <br><br><br><br><br>
 
@@ -97,13 +102,16 @@ Here is an example of how it looks in [Visual Studio Code](https://code.visualst
   
 ![(Image)](https://sv443.net/cdn/jsl/doc/jsdoc_ide.png)
   
-</div><!-- TODO: re-take image -->
+</div><!-- TODO: change to this: https://discordapp.com/channels/565933531214118942/565944571255848960/747400187303165983 -->
   
 ---
-  
+
+<br>
+
 - Each piece of documentation will have a description. It is delimited from other sections by this emoji: 🔹
-- Some of the functions / methods have special quirks to look out for or will be deprecated. This warning section is delimited from other sections with this emoji: ⚠️
-- Deprecated features should be unlisted but if not, they are indicated with a `@deprecated` tag.
+- If you are looking at a subsection, for example [`scl.filesystem`](#filesystem), its description will be marked with this emoji: 🔸
+- Some of the functions / methods have special quirks to look out for or will be deprecated. This warning section is delimited from other sections with this emoji: ❗
+- Deprecated features should be unlisted in your IDE but if not or you explicitly entered their name, they are indicated with a `@deprecated` tag and they will contain this emoji: ❌. Their descriptions should also tell you if there are alternatives.
 - You will always encounter a `@since` tag, which indicates with which version the feature was introduced.
 - The `@version` tag will tell you that something changed in a certain version.
 - If a function / method can throw an error, the `@throws` tag will tell you when this might happen and of which class the Error might be.
@@ -114,13 +122,13 @@ Here is an example of how it looks in [Visual Studio Code](https://code.visualst
 <!-- #MARKER Functions -->
 # Functions
 This section tells you all about the static functions SCL offers.  
-You can call these without the `new` keyword.  
+You have to call these without the `new` keyword.  
 
 <br>
 
 <!-- #SECTION File System -->
 ## File System
-This object, accessed with `scl.filesystem`, contains a few file-related functions.
+This subsection, accessed with `scl.filesystem`, contains a few file-related functions.
 
 <br><br>
 
@@ -188,7 +196,7 @@ This object, accessed with `scl.filesystem`, contains a few file-related functio
 > ### filesystem.readdirRecursiveSync()
 > Basically the same thing as [filesystem.readdirRecursive()](#filesystemreaddirrecursive), but this function blocks code execution, thus making it synchronous.  
 >   
-> ⚠️ This function is more resource-heavy than the asynchronous [filesystem.readdirRecursive()](#filesystemreaddirrecursive) so it is recommended that you try to use the async function over this synchronous one.
+> ❗ This function is more resource-heavy than the asynchronous [filesystem.readdirRecursive()](#filesystemreaddirrecursive) so it is recommended that you try to use the async function over this synchronous one.
 > ```ts
 > scl.filesystem.readdirRecursive(folder: string, callback?: function): Promise<string[]>
 > ```
@@ -209,12 +217,66 @@ This object, accessed with `scl.filesystem`, contains a few file-related functio
 > ```
 
 
+<br><br><br>
+
+
+> ### filesystem.downloadFile()
+> Downloads a file from the specified `url` and puts it in the folder at the specified `destPath`.  
+> The parameter `options` needs to be an object of type DownloadOptions (scroll down for definition).  
+> The function will return a Promise that resolves to a void value or rejects to an error message string.  
+> ```ts
+> scl.filesystem.downloadFile(url: string, destPath?: string, options?: DownloadOptions) -> Promise<string | void>
+> ```
+> 
+> <br><details><summary><b>Example Code - click to show</b></summary>
+> 
+> ```js
+> let opts = {
+>     fileName: "page.html",
+>     progressCallback: progress => {
+>         console.log(`Download progress: ${progress.currentB} / ${progress.totalB} bytes`);
+>     },
+>     finishedCallback: err => {
+>         if(err)
+>             console.error(`Error while downloading: ${err}`);
+>         else
+>             console.log(`File was downloaded successfully`);
+>     }
+> };
+> 
+> scl.filesystem.downloadFile("https://example.org/", "./", opts);
+> ```
+> 
+> </details><br>
+> 
+> ### DownloadOptions object
+> ```ts
+> {
+>     fileName: string;           // the name that the downloaded file should be saved as, including the file extension. Defaults to "download.txt" if left undefined.
+>     progressCallback: function; // a callback function that gets called every 50 milliseconds that gets passed an object containing info on the download progress (scroll down for more info) - sometimes the download progress can't be gotten so this callback won't contain the total size or will not be called a final time on finish. This behavior is normal.
+>     finishedCallback: function; // a callback function that gets called when the download finished and gets passed a parameter that is `null` if no error was encountered, or contains a string if an error was encountered
+> }
+> ```
+>
+> ### DownloadProgress object
+> ```ts
+> {
+>     currentB: number;  // current progress in bytes
+>     currentKB: number; // current progress in kilobytes
+>     currentMB: number; // current progress in megabytes
+>     totalB: number;    // total file size in bytes
+>     totalKB: number;   // total file size in kilobytes
+>     totalMB: number;   // total file size in megabytes
+> }
+> ```
+
+
 <br><br><br><br>
 
 
 <!-- #SECTION Generate UUID -->
 ## Generate UUID
-This object, accessed with `scl.generateUUID`, offers a few functions to generate Universally Unique Identifiers (UUIDs).  
+This subsection, accessed with `scl.generateUUID`, offers a few functions to generate Universally Unique Identifiers (UUIDs).  
   
 One thing these functions all have in common is the `uuidFormat` parameter.  
 This parameter is a string that should contain the characters `x` and `y`. These letters will be replaced by random letters or numbers, while any other characters are left untouched.  
@@ -346,7 +408,7 @@ Example: a format of `x^x-y^y` might produce a result similar to this: `1x-cy`
 
 <!-- #SECTION HTTP -->
 ## HTTP
-This object, accessed with `scl.http`, offers functions that make using Node's builtin `http` and `https` modules easier to use.  
+This subsection, accessed with `scl.http`, offers functions that make using Node's builtin `http` and `https` modules easier to use.  
 
 
 <br><br>
@@ -476,7 +538,7 @@ This object, accessed with `scl.http`, offers functions that make using Node's b
 
 <!-- #SECTION Seeded RNG -->
 ## Seeded RNG
-This object, accessed with `scl.seededRNG`, offers a few functions to generate numbers based on a seed.  
+This subsection, accessed with `scl.seededRNG`, offers a few functions to generate numbers based on a seed.  
 This means that using the same seed, you will be able to generate the same numbers over and over again, just like Minecraft's world seeds for example.  
 Seeds in SCL need to be of a certain format. Some other functions in this section will help you accomplish just that.
 
@@ -580,7 +642,7 @@ Seeds in SCL need to be of a certain format. Some other functions in this sectio
 
 <!-- #SECTION Other -->
 ## Other
-This object, accessed with just `scl`, offers many miscellaneous functions.  
+This subsection, accessed with just `scl`, offers many miscellaneous functions.  
 
 
 <br><br>
@@ -640,60 +702,6 @@ This object, accessed with just `scl`, offers many miscellaneous functions.
 <br><br><br>
 
 
-> ### downloadFile()
-> Downloads a file from the specified `url` and puts it in the folder at the specified `destPath`.  
-> The parameter `options` needs to be an object of type DownloadOptions (scroll down for definition).  
-> The function will return a Promise that resolves to a void value or rejects to an error message string.  
-> ```ts
-> scl.downloadFile(url: string, destPath?: string, options?: DownloadOptions) -> Promise<string | void>
-> ```
-> 
-> <br><details><summary><b>Example Code - click to show</b></summary>
-> 
-> ```js
-> let opts = {
->     fileName: "page.html",
->     progressCallback: progress => {
->         console.log(`Download progress: ${progress.currentB} / ${progress.totalB} bytes`);
->     },
->     finishedCallback: err => {
->         if(err)
->             console.error(`Error while downloading: ${err}`);
->         else
->             console.log(`File was downloaded successfully`);
->     }
-> };
-> 
-> scl.downloadFile("https://example.org/", "./", opts);
-> ```
-> 
-> </details><br>
-> 
-> ### DownloadOptions object
-> ```ts
-> {
->     fileName: string;           // the name that the downloaded file should be saved as, including the file extension. Defaults to "download.txt" if left undefined.
->     progressCallback: function; // a callback function that gets called every 50 milliseconds that gets passed an object containing info on the download progress (scroll down for more info) - sometimes the download progress can't be gotten so this callback won't contain the total size or will not be called a final time on finish. This behavior is normal.
->     finishedCallback: function; // a callback function that gets called when the download finished and gets passed a parameter that is `null` if no error was encountered, or contains a string if an error was encountered
-> }
-> ```
->
-> ### DownloadProgress object
-> ```ts
-> {
->     currentB: number;  // current progress in bytes
->     currentKB: number; // current progress in kilobytes
->     currentMB: number; // current progress in megabytes
->     totalB: number;    // total file size in bytes
->     totalKB: number;   // total file size in kilobytes
->     totalMB: number;   // total file size in megabytes
-> }
-> ```
-
-
-<br><br><br>
-
-
 > ### error()
 > Sends a red console message and optionally exits the process with a certain status code.  
 >   
@@ -748,7 +756,7 @@ This object, accessed with just `scl`, offers many miscellaneous functions.
 
 
 > ### isArrayEmpty()
-> Checks how many values of an array are empty (does the same check as [`svc.isEmpty()`](#isempty), but on each array item).  
+> Checks how many values of an array are empty (does the same check as [`scl.isEmpty()`](#isempty), but on each array item).  
 > Returns `true` if all items are empty, `false` if none are empty, or returns a number of how many items are empty.
 > ```ts
 > scl.isArrayEmpty(array: any[]): boolean | number
@@ -958,7 +966,7 @@ This object, accessed with just `scl`, offers many miscellaneous functions.
 >   
 > Specify the upper and lower boundary with the parameters `min` and `max`  
 >   
-> ⚠️ Warning! This RNG is not cryptographically secure, so don't do any password hashing or stuff that needs to be highly secure with this function!
+> ❗ Warning! This RNG is not cryptographically secure, so don't do any password hashing or stuff that needs to be highly secure with this function!
 > ```ts
 > scl.randRange(min: number, max: number): number
 > ```
@@ -1160,14 +1168,17 @@ This object, accessed with just `scl`, offers many miscellaneous functions.
 
 <br><br><br><br><br>
 
-<!-- #MARKER Functions -->
+<!-- #MARKER Classes -->
 # Classes
 This section contains all of SCLs classes.  
-If you don't know about Object Oriented Programming in JavaScript, you can learn it [here.](https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Objects/Object-oriented_JS)  
+If you don't know about Object Oriented Programming in JavaScript, you can learn about it [here.](https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Objects/Object-oriented_JS)  
 These need to be created with the `new` keyword and constructing multiple objects of these classes will not make them interfere with each other.
+
 
 <br>
 
+
+<!-- #SECTION FolderDaemon -->
 > ### FolderDaemon
 > The FolderDaemon supervises a directory and optionally its subdirectories and executes a callback function if one or more of the files have changed.  
 > `changed` means if a file's content has changed, a file has been removed or a file has been added.
@@ -1177,7 +1188,7 @@ These need to be created with the `new` keyword and constructing multiple object
 > 
 > 
 > > ### Constructor
-> > Constructs a new object of the class `FolderDaemon`
+> > Constructs a new object of the class `FolderDaemon`.  
 > >   
 > > Specify the path to the directory you want to supervise with the param `dirPath`.  
 > > The param `filesBlacklist` can be passed an array of strings which contain [glob patterns.](https://en.wikipedia.org/wiki/Glob_(programming)) If a file matches any of these patterns, the file will be ignored.  
@@ -1226,10 +1237,516 @@ These need to be created with the `new` keyword and constructing multiple object
 > > ```ts
 > > FolderDaemon.intervalCall(): void
 > > ```
+> 
+> 
+> <br><br><br>
+> 
+> 
+> > **<details><summary>Example Code - Click to view</summary>**
+> > 
+> > ```js
+> > let dirPath = "./";          // supervises your entire project workspace
+> > let blacklist = [ "*.txt" ]; // ignores all files with the extension .txt
+> > let recursive = true;        // scans through all subdirectories too
+> > let updateInterval = 1000;   // the interval in milliseconds of when to scan all files
+> > 
+> > let fd = new scl.FolderDaemon(dirPath, blacklist, recursive, updateInterval);
+> > 
+> > fd.onChanged((err, result) => {
+> >     if(err)
+> >         console.error(`Error: ${err}`);
+> >     else
+> >         console.log(`Files have changed:\n- ${result.join("\n- ")}`);
+> > });
+> > ```
+> > 
+> > </details>
 
 
 <br><br><br>
 
 
+<!-- #SECTION MenuPrompt -->
+> ### MenuPrompt
+> The class `MenuPrompt` creates an interactive prompt with one or many menus - add them using [`MenuPrompt.addMenu()`](#addmenu)  
+> To translate the messages, you can use the [`MenuPromptLocalization`](#menupromptlocalization-object) object, which is where all text variables are stored.  
+>   
+> ❗ Warning: After creating a MenuPrompt object, the process will no longer exit automatically until the MenuPrompt has finished or was explicitly closed. You have to explicitly use process.exit() until the menu has finished or is closed.  
+> ❗ 2nd Warning: Don't log anything to the console or write anything to `process.stdin` while the MenuPrompt is opened as it would completely mess it up.  
+>   
+> This is how a MenuPrompt might look like:  
+>   
+> ![MenuPrompt example image](https://sv443.net/cdn/jsl/doc/menu_prompt_small.png)
+> 
+> 
+> <br><br>
+> 
+> 
+> > ### Constructor
+> > Constructs a new object of the class `MenuPrompt`.  
+> >   
+> > The only parameter `options` can be passed an object of type [`MenuPromptOptions`](#menupromptoptions-object).  
+> > Leaving this param empty will make the MenuPrompt use default values.
+> > ```ts
+> > new MenuPrompt(options?: MenuPromptOptions)
+> > ```
+> 
+> 
+> <br><br>
+> 
+> 
+> > ### addMenu()
+> > Adds a new menu to the menu prompt.  
+> > A single menu prompt can hold a virtually infinite amount of menus.  
+> > You can even dynamically add new menus while the MenuPrompt is still open.  
+> >   
+> > The param `menu` needs to be an object of type [`MenuPromptMenu`](#menupromptmenu-object)  
+> >   
+> > This method either returns `true` if it was successful or it returns a string containing an error message.
+> > ```ts
+> > MenuPrompt.addMenu(menu: MenuPromptMenu): boolean | string
+> > ```
+> 
+> 
+> <br><br>
+> 
+> 
+> > ### open()
+> > Opens the MenuPrompt.  
+> > ❗ Warning: While the menu is opened you shouldn't write anything to the console / to the stdout and stderr as this could mess up the layout of the menu and/or make stuff unreadable.
+> >   
+> > This method either returns `true` if it was successful or it returns a string containing an error message.
+> > ```ts
+> > MenuPrompt.open(): boolean | string
+> > ```
+> 
+> 
+> <br><br>
+> 
+> 
+> > ### close()
+> > Closes the MenuPrompt and returns the results of all menus that have been completed up to this point.  
+> >   
+> > This method returns the results of the MenuPrompt as an array of objects of type [`MenuPromptResult`](#menupromptresult-object)
+> > ```ts
+> > MenuPrompt.close()
+> > ```
+> 
+> 
+> <br><br>
+> 
+> 
+> > ### currentMenu()
+> > Returns the (zero-based) index of the currently open menu of the MenuPrompt.  
+> > If the MenuPrompt hasn't been opened yet, this will return `-1`
+> > ```ts
+> > MenuPrompt.currentMenu(): number
+> > ```
+> 
+> 
+> <br><br>
+> Returns the current results of the MenuPrompt as an array of objects of type [`MenuPromptResult`](#menupromptresult-object)  
+> This does **not** close the menu prompt, unlike `close()`  
+>   
+> If there aren't any completed menus yet, this method will return `null`
+> > ### result()
+> > 
+> > ```ts
+> > MenuPrompt.result(): MenuPromptResult | null
+> > ```
+> 
+> 
+> <br><br>
+> 
+> 
+> > ### validateMenu()
+> > Checks a menu object for valid syntax.  
+> >   
+> > The param `menu` needs to be a single object of type [`MenuPromptMenu`](#menupromptmenu-object)  
+> >   
+> > The method either returns `true` if the menu is valid or an array of strings containing error messages.
+> > ```ts
+> > MenuPrompt.validateMenu(menu: MenuPromptMenu): boolean | string[]
+> > ```
+> 
+> 
+> <br><br>
+> 
+> 
+> > ### MenuPromptMenu object
+> > This specifies a single menu of a MenuPrompt.
+> > ```ts
+> > {
+> >     title: "Example Menu", // the title of the menu
+> >     options: [             // an array of options the user can select
+> >         {
+> >             "key": "1",          // the key the user needs to press to select this option
+> >             "description": "Foo" // the name / description of this option
+> >         },
+> >         {
+> >             "key": "2",
+> >             "description": "Bar"
+> >         },
+> >         // ...
+> >     ]
+> > }
+> > ```
+> 
+> 
+> <br><br>
+> 
+> 
+> > ### MenuPromptOptions object
+> > This object is used in the constructor of a MenuPrompt.  
+> > Here you can specify a few settings that affect all menus of a MenuPrompt.
+> > ```ts
+> > {
+> >     exitKey: string;         // The key or keys that need to be entered to exit the prompt - if left empty, the menu can't be exited with a key
+> >     optionSeparator: string; // The separator character(s) between the option key and the option description
+> >     cursorPrefix: string;    // Character(s) that should be prefixed to the cursor. Will default to this arrow: "─►"
+> >     retryOnInvalid: boolean; // Whether the menu should be retried if the user entered a wrong option - defaults to true - if set to false, continues to next menu when an invalid option was selected
+> >     onFinished: function;    // A function that gets called when the user is done with all of the menus of the prompt or entered the exit key(s). The only passed parameter is an array containing all selected option keys
+> >     autoSubmit: boolean;     // If set to true, the MenuPrompt will only accept a single character of input and will then automatically submit the current menu - make sure the option keys are only a single character in length! If set to false, the user will have to explicitly press the Enter key to submit a value.
+> > }
+> > ```
+> 
+> 
+> <br><br>
+> 
+> 
+> > ### MenuPromptResult object
+> > This object contains information about what option a user selected in a single menu.  
+> > You will only encounter these objects inside of arrays.
+> > ```ts
+> > {
+> >     key: string;         // The key of the selected option
+> >     description: string; // The description of the selected option
+> >     menuTitle: string;   // The title of the menu
+> >     optionIndex: number; // The zero-based index of the selected option
+> >     menuIndex: number;   // The zero-based index of the menu
+> > }
+> > ```
+> 
+> 
+> <br><br>
+> 
+> 
+> > ### MenuPromptLocalization object
+> > You can access this object directly on the MenuPrompt with the property `localization` (example is below).
+> > ```ts
+> > {
+> >     wrongOption: string;           // The text that's displayed when a wrong key was pressed
+> >     invalidOptionSelected: string; // A different text that's displayed when a wrong key was pressed
+> >     exitOptionText: string;        // The name of the exit option
+> > }
+> > ```
+> > 
+> > <br><details><summary><b>Example Localization - click to show</b></summary>
+> > ```js
+> > let mp = new scl.MenuPrompt();
+> > 
+> > mp.addMenu({
+> >     title: "Example Menu",
+> >     options: [
+> >         {
+> >             key: "1",
+> >             description: "Foo"
+> >         },
+> >         {
+> >             key: "2",
+> >             description: "Bar"
+> >         }
+> >     ]
+> > });
+> > 
+> > mp.localization.wrongOption = "You idiot need to type one of the green options";
+> > mp.localization.invalidOptionSelected = "You idiot selected a wrong option, smh";
+> > mp.localization.exitOptionText = "I don't wanna deal with your shit anymore";
+> > 
+> > mp.open();
+> > ```
+> > 
+> > </details>
+> 
+> 
+> <br><br><br>
+> 
+> 
+> > **<details><summary>Example Code - Click to view</summary>**
+> > 
+> > ```js
+> > let opts = {
+> >     exitKey: "x",
+> >     autoSubmit: true,
+> >     onFinished: (res) => {
+> >         console.log(`Finished. Selected option: ${res[0].key}`);
+> >     }
+> > };
+> > 
+> > let mp = new scl.MenuPrompt(opts);
+> > 
+> > let menu = {
+> >     title: "Example Menu",
+> >     options: [
+> >         {
+> >             key: "1",
+> >             description: "Foo"
+> >         },
+> >         {
+> >             key: "2",
+> >             description: "Bar"
+> >         }
+> >     ]
+> > };
+> > 
+> > let menuValid = mp.validateMenu(menu);
+> > if(menuValid) // make sure menu is valid
+> >     mp.addMenu();
+> > else
+> >     console.log(`Error: Menu is invalid.\n${menuValid.join(", ")}`);
+> > 
+> > mp.open();
+> > ```
+> > 
+> > </details>
+
+
+<br><br><br>
+
+
+<!-- #SECTION ProgressBar -->
+> ### ProgressBar
+> The ProgressBar simply displays a progress bar in the Command Line Interface (CLI).  
+> It displays an automatically calculated percentage value and am optional message.  
+>   
+> This is how it might look like:  
+> ![ProgressBar example image](https://sv443.net/cdn/jsl/doc/progress_bar_small.png) <!-- TODO: use GIF instead of PNG -->
+> 
+> 
+> <br><br>
+> 
+> 
+> > ### Constructor
+> > Constructs a new object of the class `ProgressBar`.  
+> >   
+> > The param `timesToUpdate` needs to be passed the number of times you are going to call the method [`next()`](#next).  
+> > The optional parameter `initialMessage` can contain a string that is displayed at 0% progress. If left undefined, no message will appear.
+> > ```ts
+> > new ProgressBar(timesToUpdate: number, initialMessage?: string)
+> > ```
+> 
+> 
+> <br><br>
+> 
+> 
+> > ### next()
+> > Increments the progress bar once.  
+> > How many times you are going to call this method needs to be known when creating a ProgressBar object as it is needed in the constructor.  
+> > This is a fundamental thing about progress bars and I can't change it.  
+> >   
+> > The optional parameter `message` can be used to display a message next to the progress bar.
+> > ```ts
+> > ProgressBar.next(message?: string): void
+> > ```
+> 
+> 
+> <br><br>
+> 
+> 
+> > ### onFinish()
+> > Registers a function to be called when the progress bar reaches 100%.
+> > ```ts
+> > ProgressBar.onFinish(callback: function): void;
+> > ```
+> 
+> 
+> <br><br>
+> 
+> 
+> > ### getProgress()
+> > Returns the current progress as a floating-point number between `0.0` and `1.0`
+> > ```ts
+> > ProgressBar.getProgress(): number;
+> > ```
+> 
+> 
+> <br><br>
+> 
+> 
+> > ### getRemainingIncrements()
+> > Returns the amount of increments needed to reach 100% progress - aka the amount of times the method [`next()`](#next) needs to be called.
+> > ```ts
+> > ProgressBar.getRemainingIncrements(): number;
+> > ```
+> 
+> 
+> <br><br><br>
+> 
+> 
+> > **<details><summary>Example Code - Click to view</summary>**
+> > 
+> > ```js
+> > let pb = new scl.ProgressBar(5, "Hello, World!");
+> > let iter = 0;
+> > 
+> > pb.onFinish(() => {
+> >     console.log("Finished!");
+> >     process.exit();
+> > });
+> > 
+> > setInterval(() => {
+> >     iter++;
+> >     pb.next(`Iteration number ${iter}`);
+> > }, 2000);
+> > ```
+> > 
+> > </details>
+
+
+<br><br><br><br><br>
+
+<!-- #MARKER Objects -->
+# Objects
+This section contains all of SCLs objects.  
+These are read-only, static and passive properties and will not invoke or change anything.  
+
+
+<br>
+
+
+<!-- #SECTION colors -->
+> ### colors
+> This object can be used to color text in the Command Line Interface (CLI).  
+> Since typing `scl.colors.xy.color_name` can be quite long, I recommend declaring one or multiple variables like shown in the example code below.
+> ```ts
+> scl.colors
+> ```
+> 
+> **Supported colors are:**
+> | Color | SCL |
+> | --- | --- |
+> | Reset (Usually White or Black) | `scl.colors.rst` or `scl.colors.fg.rst` or `scl.colors.bg.rst` |
+> | Fat Font | `scl.colors.fat` |
+> | Blinking | `scl.colors.blink` |
+> | Black Text | `scl.colors.fg.black` |
+> | Black Background | `scl.colors.bg.black` |
+> | Red Text | `scl.colors.fg.red` |
+> | Red Background | `scl.colors.bg.red` |
+> | Green Text | `scl.colors.fg.green` |
+> | Green Background | `scl.colors.bg.green` |
+> | Yellow Text | `scl.colors.fg.yellow` |
+> | Yellow Background | `scl.colors.bg.yellow` |
+> | Blue Text | `scl.colors.fg.blue` |
+> | Blue Background | `scl.colors.bg.blue` |
+> | Magenta Text | `scl.colors.fg.magenta` |
+> | Magenta Background | `scl.colors.bg.magenta` |
+> | Cyan Text | `scl.colors.fg.cyan` |
+> | Cyan Background | `scl.colors.bg.cyan` |
+> | White Text | `scl.colors.fg.white` |
+> | White Background | `scl.colors.bg.white` |
+> 
+> <br><details><summary><b>Example Code - click to show</b></summary>
+> 
+> ```js
+> const fgc = scl.colors.fg;
+> const bgc = scl.colors.bg;
+> 
+> console.log(`${scl.colors.fat}Foreground Colors:  ${fgc.green}Green${fgc.rst} ${fgc.magenta}Magenta${fgc.rst} ${fgc.blue}Blue${fgc.rst} ${fgc.cyan}Cyan${fgc.rst}`);
+> console.log(`${scl.colors.fat}Background Colors:  ${bgc.green}Green${fgc.rst} ${bgc.magenta}Magenta${fgc.rst} ${bgc.blue}Blue${fgc.rst} ${bgc.cyan}Cyan${bgc.rst}`);
+> ```
+> 
+> </details>
+
+
+<br><br><br>
+
+
+> ### info
+> This object offers a few read-only bits of information about SCL, like the version number or license.  
+> ```ts
+> scl.info
+> ```
+> 
+> **Properties:**
+> | Property | Type | Description |
+> | --- | --- | --- |
+> | `scl.info.version` | `string` | SCLs current version, as a semver-compatible string |
+> | `scl.info.intVersion` | `number[]` | SCLs version, as an array of numbers, for easier reading |
+> | `scl.info.name` | `string` | The name of SCL (who knows, maybe it'll change eventually) |
+> | `scl.info.desc` | `string` | A short description of what SCL is and does |
+> | `scl.info.author` | `string` | The name of the author of SCL (currently `Sv443`) |
+> | `scl.info.authorLong` | `string` | The authors name, email address and homepage in this format: `Name <Email> (URL)` |
+> | `scl.info.contributors` | `object[]` | The `contributors` property of SCLs `package.json` file |
+> | `scl.info.license` | `string` | The license and URL to the license text of SCL in the format `License (URL)` |
+> | `scl.info.documentation` | `string` | A URL to SCLs documentation |
+> 
+> <br><details><summary><b>Example Code - click to show</b></summary>
+> 
+> ```js
+> if(scl.info.intVersion[0] < 1 && scl.info.intVersion[1] < 10)
+>     console.error(`This code needs ${scl.info.name} v1.10.x or higher to run!\nHow to install the latest version: ${scl.info.documentation}#installation`);
+> ```
+> 
+> </details>
+
+
+<br><br><br><br><br>
+
+
+# Legal Information
+This is where you can find all legal information about SCL and the Sv443 Network.
+
+<br>
+
+## License
+SvCoreLib is licensed under the MIT license. You can view the full license text by [clicking here.](https://sv443.net/LICENSE)  
+  
+Below is a short summary of the license (it is not legal advice though):  
+### ✅ You can:
+- use this library anywhere
+- copy the source code of the library
+- modify the source code of the library
+- merge the source code with other code
+- publish and distribute the code (even under a different license)
+- monetize or sell the code or projects that contain the code
+### ❌ You cannot:
+- remove the `LICENSE.txt` file from the finished product. It has to be contained in every distribution of your product and accessible by the end user
+- publish the code without modifying it and claim it as your own
+- modify the code, publish it and then claim it as your own (and no-one else's)
+- claim any warranty. This software is provided "as is"
+- demand any liability from the author(s) and contributors
+
+<br>
+
+## Disclaimer
+I will hereby not claim any legal responsibility or liability for SvCoreLib. Whether it is used maliciously or breaks something, I can't be held accountable.  
+I am doing my best to ensure security and stability but there's only so much a single developer can do.  
+Security patches are created as soon as possible but I don't have any binding responsibility to make these patches.  
+Please create a backup before using this library if you want to be extra secure and report any issue that may arise to the [GitHub issue tracker](https://github.com/Sv443/SvCoreLib/issues/new/choose) and I will try my best to fix it as soon as possible.
+
+<br>
+
+## Privacy Policy
+[Click here to view the privacy policy.](https://sv443.net/privacypolicy/en)
+
+<br>
+
+## Security Policy
+[Click here to view the security policy.](./.github/SECURITY.md)
+
+<br>
+
+## Site Notice
+[Click here to view the site notice / Impressum.](https://sv443.net/imprint/en)
+
+
+<br><br><br><br>
+
+<div align="center" style="text-align: center">
+
+Made with ❤️ by [Sv443](https://github.com/Sv443)  
+You can support me on [GitHub Sponsors](https://github.com/sponsors/Sv443), [Patreon](https://patreon.com/Sv443_), [Ko-fi](https://ko-fi.com/Sv443_) or [PayPal](https://paypal.me/SvenFehler)
+
+</div>
 
 <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
