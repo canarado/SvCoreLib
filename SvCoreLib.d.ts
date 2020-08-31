@@ -745,6 +745,124 @@ export class SelectionMenu {
     close(): string | boolean;
 }
 
+/**
+ * 🔹 Creates an instance of a Vector3 object, can be used in most Vector-math operations. 🔹
+ */
+export class Vector3 {
+
+    /**
+     * 🔹 Constructs a new instance of the Vector3 object. 🔹
+     * @param x The x-component of the Vector3, representing an x-coordinate for the vector.
+     * @param y The y-component of the Vector3, representing a y-coordinate for the vector.
+     * @param z The z-component of the Vector3, representing a z-cooridnate for the vector.
+     */
+    constructor(x: number, y: number, z: number);
+
+    /**
+     * 🔹 Creates and returns a new instance of the Vector3 with it's coordinates negated. 🔹
+     * @return Returns a new instance of a Vector3, does **not** change original Vector3 object.
+     * @since 1.11.1
+     */
+    negate(): Vector3;
+
+    /**
+     * 🔹 Creates and returns a new Vector3 with randomized coordinate values. 🔹
+     * ❗ Uses javascript's built in Math.random() method to generate random values between 0 and 1.
+     * @param multiplier Default: 1 -  A multiplier to allow the vector to have coordinate values higher than 1, this is the number that is multiplied with the final number from Math.random.
+     * @param min Default: 0 - A minimum number that Math.random is allowed to output.
+     * @param max Default: min+1 - A maximum number that Math.random is allowed to output.
+     */
+    static RandomizedArray(multiplier?: number, min?: number, max?: number): Vector3;
+
+    /**
+     * 🔹 Adds a vector to the current vector to produce a vector that is the sum of the two. 🔹
+     * @param vector The vector to add to the current vector
+     * @return Returns a new instance of the Vector3 object.
+     * @since 1.11.1
+     */
+    add(vector: Vector3): Vector3;
+
+    /**
+     * 🔹 Subtracts a vector from the current vector to produce a vector that is a result of that subtraction. 🔹
+     * @param vector The vector to subtract from the current vector.
+     * @return Returns a new instance of the Vector3 object.
+     * @since 1.11.1
+     */
+    subtract(vector: Vector3): Vector3;
+
+    /**
+     * 🔹 Multiplies the current vector by some factor<amount>. 🔹
+     * @param amount The factor by which the current vector's coordinates should be multiplied.
+     * @return Returns a new instance of the Vector3 object.
+     * @since 1.11.1
+     */
+    multiply(amount: number): Vector3;
+
+    /**
+     * 🔹 Divides the current vector by some factor<amount>. 🔹
+     * @param amount The factor by which the current vectors's coordinates should be divided.
+     * @return Returns a new instance of the Vector3 object.
+     * @since 1.11.1
+     */
+    divide(amount: number): Vector3;
+
+    /**
+     * 🔹 Adds the values of two vectors together, this and another instance of a vector, to change the current vector. 🔹
+     * @param vector The vector with which to combine with the current vector.
+     * @return Returns the current vector the method was called on.
+     * @since 1.11.1
+     */
+    combineWithVector(vector: Vector3);
+
+    /**
+     * 🔹 Subtracts the values of one vector from another, this and another instance of a vector, change the current vector. 🔹
+     * @param vector The vector who's values are deducted from the current vector.
+     * @return Returns the current vector the method was called on.
+     * @since 1.11.1
+     */
+    subtractVector(vector: Vector3): Vector3;
+
+    /**
+     * 🔹 Multiplies the current vector by a scalar, or some factor to increase the coordinates' values. 🔹
+     * @param scalar The factor you wish to multiply the coordinates by.
+     * @return Returns the current vector the method was called on.
+     * @since 1.11.1
+     */
+    scalarMultiply(scalar: number): Vector3;
+
+    /**
+     * 🔹 Divides the current vector by a scalar, or some factor to decrease the coordinates' values. 🔹
+     * @param scalar The factor you wish to divide the coordinates by.
+     * @return Returns the current vector the method was called on.
+     * @since 1.11.1
+     */
+    scalarDivide(scalar: number): Vector3;
+
+    /**
+     * 🔹 Calculates the dot product of two vectors. 🔹
+     * ❗ This is a static method and can be called without instantiating a new Vector3 by just accessing the Vector3's object methods.
+     * @param vector1 The first vector in the calculation.
+     * @param vector2 The second vector in the calculation.
+     * @return Returns the dot-product of the two vectors, which will be a number.
+     * @since 1.11.1
+     */
+    static dotProduct(vector1: Vector3, vector2: Vector3): number;
+
+    /**
+     * 🔹 Gives the length of the vector. 🔹
+     * @return Returns the length of the vector.
+     * @since 1.11.1
+     */
+    length(): number;
+
+    /**
+     * 🔹 Gives the square-length of the vector. 🔹
+     * @return Returns the square-length of the vector.
+     * @since 1.11.1
+     */
+    squaredLength(): number;
+}
+
 //#MARKER objects
 
 /**
